@@ -26,7 +26,7 @@ public class User {
     @Column(nullable = true)
     private LocalDateTime otpExpirationTime;
 
-    // Constructors
+    // Constructors, Getters, and Setters...
 
     public User() {
     }
@@ -36,8 +36,6 @@ public class User {
         this.password = password;
         this.email = email;
     }
-
-    // Getters and Setters
 
     public Long getId() {
         return id;
