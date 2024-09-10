@@ -58,27 +58,29 @@ public class UserService implements UserDetailsService {
     }
 
     public User saveUser(User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // Chỉ mã hóa mật khẩu nếu chưa được mã hóa
+        if (!user.getPassword().startsWith("$2a$")) { // kiểm tra xem mật khẩu đã được mã hóa chưa
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
         return userRepository.save(user);
     }
+
+
 
     public boolean validateUser(String username, String password) {
         Optional<User> userOpt = findByUsername(username);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            System.out.println("Username input: " + username);
-            System.out.println("Password input: " + password);
-            System.out.println("Password from DB (encrypted): " + user.getPassword());
-
-            boolean isPasswordMatch = passwordEncoder.matches(password, user.getPassword());
-            System.out.println("Password matches: " + isPasswordMatch);
-
-            return isPasswordMatch;
-        } else {
-            System.out.println("User not found for username: " + username);
+            // So sánh mật khẩu đã mã hóa với mật khẩu gốc
+            boolean passwordMatches = passwordEncoder.matches(password, user.getPassword());
+            System.out.println("Password matches: " + passwordMatches); // Kiểm tra
+            return passwordMatches;
         }
         return false;
     }
+
+
+
 
     public String generateOtp() {
         Random random = new Random();

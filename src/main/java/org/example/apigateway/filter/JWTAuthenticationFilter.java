@@ -35,7 +35,8 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         if (path.equals("/api/auth/login") ||
                 path.equals("/api/auth/-otp") ||
                 path.equals("/api/auth/register") ||
-                path.equals("/api/auth/verify-otp-register") ||  // Bỏ qua xác thực JWT cho endpoint verify OTP
+                path.equals("/api/auth/verify-otp") ||
+                path.equals("/api/auth/verify-otp-register") ||
                 path.equals("/api/auth/forgot-password")) {
             filterChain.doFilter(request, response);
             return;

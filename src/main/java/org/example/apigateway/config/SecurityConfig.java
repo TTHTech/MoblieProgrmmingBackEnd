@@ -21,10 +21,12 @@ public class SecurityConfig {
     }
 
     // Bean PasswordEncoder để mã hóa mật khẩu
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -34,6 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/register",
                                 "/api/auth/login",
                                 "/api/auth/login-otp",
+                                "/api/auth/verify-otp",
                                 "/api/auth/request-otp-email",
                                 "/api/auth/verify-otp-register",  // Thêm đường dẫn để xác thực OTP
                                 "/api/auth/forgot-password").permitAll() // Cho phép truy cập các endpoint công khai
