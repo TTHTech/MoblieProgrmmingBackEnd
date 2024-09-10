@@ -2,6 +2,7 @@ package org.example.apigateway.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "users")
@@ -26,6 +27,26 @@ public class User {
     @Column(nullable = true)
     private LocalDateTime otpExpirationTime;
 
+    // Thêm trường trạng thái kích hoạt tài khoản
+    @Column(nullable = false)
+    private boolean isActive = false;
+
+    // Thông tin hồ sơ người dùng
+    @Column(nullable = true)
+    private String firstName;
+
+    @Column(nullable = true)
+    private String lastName;
+
+    @Column(nullable = true)
+    private LocalDate dateOfBirth;
+
+    @Column(nullable = true)
+    private String phoneNumber;
+
+    @Column(nullable = true)
+    private String address;
+
     // Constructors, Getters, and Setters...
 
     public User() {
@@ -36,6 +57,8 @@ public class User {
         this.password = password;
         this.email = email;
     }
+
+    // Getters và Setters
 
     public Long getId() {
         return id;
@@ -83,5 +106,53 @@ public class User {
 
     public void setOtpExpirationTime(LocalDateTime otpExpirationTime) {
         this.otpExpirationTime = otpExpirationTime;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

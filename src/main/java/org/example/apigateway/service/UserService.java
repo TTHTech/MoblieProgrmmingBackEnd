@@ -3,16 +3,22 @@ package org.example.apigateway.service;
 import org.example.apigateway.model.User;
 import org.example.apigateway.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Random;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
@@ -20,50 +26,77 @@ public class UserService {
     @Autowired
     private JavaMailSender mailSender;
 
-    // Tìm người dùng theo username
+    @Autowired
+    @Lazy
+    private PasswordEncoder passwordEncoder;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), new ArrayList<>());
+        } else {
+            throw new UsernameNotFoundException("User not found with username: " + username);
+        }
+    }
+
+    public String encodePassword(String rawPassword) {
+        return passwordEncoder.encode(rawPassword);
+    }
+
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
 
-    // Tìm người dùng theo email
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
-    // Lưu người dùng
+    public Optional<User> findById(Long userId) {
+        return userRepository.findById(userId);
+    }
+
     public User saveUser(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
-    // Phương thức xác thực đăng nhập bằng username và password
     public boolean validateUser(String username, String password) {
         Optional<User> userOpt = findByUsername(username);
         if (userOpt.isPresent()) {
-            return userOpt.get().getPassword().equals(password);
+            User user = userOpt.get();
+            System.out.println("Username input: " + username);
+            System.out.println("Password input: " + password);
+            System.out.println("Password from DB (encrypted): " + user.getPassword());
+
+            boolean isPasswordMatch = passwordEncoder.matches(password, user.getPassword());
+            System.out.println("Password matches: " + isPasswordMatch);
+
+            return isPasswordMatch;
+        } else {
+            System.out.println("User not found for username: " + username);
         }
         return false;
     }
 
-    // Tạo mã OTP ngẫu nhiên
     public String generateOtp() {
         Random random = new Random();
-        return String.valueOf(100000 + random.nextInt(900000)); // Tạo OTP gồm 6 chữ số
+        return String.valueOf(100000 + random.nextInt(900000));
     }
 
-    // Tạo và lưu OTP cho người dùng
     public void generateAndSaveOtp(String email) {
         Optional<User> userOpt = findByEmail(email);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             String otp = generateOtp();
             user.setOtp(otp);
-            user.setOtpExpirationTime(LocalDateTime.now().plusMinutes(10)); // OTP có hiệu lực trong 10 phút
-            saveUser(user); // Cập nhật thông tin người dùng
-            sendOtpEmail(user.getEmail(), otp); // Gửi OTP qua email
+            user.setOtpExpirationTime(LocalDateTime.now().plusMinutes(10));
+            saveUser(user);
+            sendOtpEmail(user.getEmail(), otp);
         }
     }
 
-    // Gửi OTP qua email
     private void sendOtpEmail(String to, String otp) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(to);
@@ -72,7 +105,6 @@ public class UserService {
         mailSender.send(message);
     }
 
-    // Xác minh OTP và kiểm tra thời gian hết hạn
     public boolean verifyOtp(String email, String otp) {
         Optional<User> userOpt = findByEmail(email);
         if (userOpt.isPresent()) {
@@ -82,13 +114,35 @@ public class UserService {
         return false;
     }
 
-    // Đặt lại mật khẩu mới cho người dùng
     public void resetPassword(String email, String newPassword) {
         Optional<User> userOpt = findByEmail(email);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            user.setPassword(newPassword); // Lưu mật khẩu mới
-            saveUser(user); // Cập nhật thông tin người dùng
+            user.setPassword(passwordEncoder.encode(newPassword));
+            saveUser(user);
         }
     }
+
+    public User updateUserProfile(Long userId, User updatedUser, String otp) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            User existingUser = userOpt.get();
+
+            // Kiểm tra OTP trước khi cập nhật hồ sơ
+            if (verifyOtp(existingUser.getEmail(), otp)) {
+                existingUser.setFirstName(updatedUser.getFirstName());
+                existingUser.setLastName(updatedUser.getLastName());
+                existingUser.setPhoneNumber(updatedUser.getPhoneNumber());
+                existingUser.setAddress(updatedUser.getAddress());
+                existingUser.setDateOfBirth(updatedUser.getDateOfBirth());
+
+                return userRepository.save(existingUser);
+            } else {
+                throw new IllegalArgumentException("Invalid OTP");
+            }
+        } else {
+            throw new UsernameNotFoundException("User not found with id: " + userId);
+        }
+    }
+
 }
