@@ -1,9 +1,10 @@
 package org.example.apigateway.controller;
-
+import org.example.apigateway.util.JwtUtil;
 import org.example.apigateway.model.User;
 import org.example.apigateway.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -15,16 +16,22 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private JwtUtil jwtUtil; // Inject JwtUtil vào controller
+
     // Đăng nhập bằng username và password
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody User user) {
         boolean isValidUser = userService.validateUser(user.getUsername(), user.getPassword());
         if (isValidUser) {
-            return ResponseEntity.ok("Login successful");
+            // Tạo JWT cho người dùng
+            String token = jwtUtil.generateToken(user.getUsername()); // Sử dụng jwtUtil
+            return ResponseEntity.ok("Bearer " + token); // Trả về JWT cho client
         } else {
             return ResponseEntity.status(401).body("Invalid username or password");
         }
     }
+
 
     // Đăng ký tài khoản mới
     @PostMapping("/register")
@@ -82,5 +89,15 @@ public class UserController {
             return ResponseEntity.ok("Password reset successfully");
         }
         return ResponseEntity.status(401).body("Invalid OTP");
+    }
+
+    @PutMapping("/profile/{userId}")
+    public ResponseEntity<String> updateProfile(@PathVariable Long userId, @RequestBody User updatedUser) {
+        try {
+            userService.updateUserProfile(userId, updatedUser);
+            return ResponseEntity.ok("Profile updated successfully");
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
     }
 }
