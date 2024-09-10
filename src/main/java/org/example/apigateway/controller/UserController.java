@@ -134,18 +134,30 @@ public class UserController {
     // Cập nhật hồ sơ người dùng sau khi xác nhận OTP
     @PutMapping("/profile/{userId}")
     public ResponseEntity<String> updateProfile(@PathVariable Long userId, @RequestBody User updatedUser) {
+        // Tìm người dùng hiện tại trong cơ sở dữ liệu
+        Optional<User> existingUserOpt = userService.findById(userId);
+        if (existingUserOpt.isEmpty()) {
+            return ResponseEntity.status(404).body("User not found");
+        }
+
+        User existingUser = existingUserOpt.get();
+
         // OTP từ body
         String otp = updatedUser.getOtp();
-        if (!userService.verifyOtp(updatedUser.getEmail(), otp)) {
+
+        // Xác minh OTP dựa trên email của existingUser
+        if (!userService.verifyOtp(existingUser.getEmail(), otp)) {
             return ResponseEntity.status(400).body("Invalid OTP");
         }
 
         try {
+            // Cập nhật hồ sơ người dùng
             userService.updateUserProfile(userId, updatedUser, otp);
             return ResponseEntity.ok("Profile updated successfully");
         } catch (UsernameNotFoundException e) {
             return ResponseEntity.status(404).body(e.getMessage());
         }
     }
+
 
 }
