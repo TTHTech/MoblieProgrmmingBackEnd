@@ -1,5 +1,6 @@
 package org.example.apigateway.controller;
 
+import org.example.apigateway.model.OtpRequest;
 import org.example.apigateway.model.User;
 import org.example.apigateway.service.UserService;
 import org.example.apigateway.util.JwtUtil;
@@ -112,13 +113,18 @@ public class UserController {
 
     // Xác nhận OTP và đặt lại mật khẩu
     @PostMapping("/verify-otp")
-    public ResponseEntity<String> verifyOtp(@RequestParam String email, @RequestParam String otp, @RequestParam String newPassword) {
+    public ResponseEntity<String> verifyOtp(@RequestBody OtpRequest otpRequest) {
+        String email = otpRequest.getEmail();
+        String otp = otpRequest.getOtp();
+        String newPassword = otpRequest.getNewPassword();
+
         if (userService.verifyOtp(email, otp)) {
             userService.resetPassword(email, newPassword);
             return ResponseEntity.ok("Password reset successfully");
         }
         return ResponseEntity.status(401).body("Invalid OTP");
     }
+
 
     // Gửi OTP để cập nhật hồ sơ
     @PostMapping("/profile/request-otp/{userId}")

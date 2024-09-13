@@ -33,11 +33,11 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
         // Kiểm tra nếu endpoint là công khai, không cần kiểm tra JWT
         if (path.equals("/api/auth/login") ||
-                path.equals("/api/auth/-otp") ||
+                path.equals("/api/auth/login-otp") ||
                 path.equals("/api/auth/register") ||
                 path.equals("/api/auth/verify-otp") ||
                 path.equals("/api/auth/verify-otp-register") ||
-                path.equals("/api/auth/forgot-password")) {
+                path.equals("/api/auth/forgot-password")) { // Đảm bảo forgot-password được bỏ qua
             filterChain.doFilter(request, response);
             return;
         }
@@ -56,6 +56,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
+
 
     // Lấy JWT từ header Authorization
     private String getTokenFromRequest(HttpServletRequest request) {

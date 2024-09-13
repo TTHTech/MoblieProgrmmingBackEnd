@@ -3,6 +3,7 @@ package org.example.apigateway.config;
 import org.example.apigateway.filter.JWTAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -12,6 +13,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+
 public class SecurityConfig {
 
     private final JWTAuthenticationFilter jwtAuthenticationFilter;
@@ -38,14 +40,14 @@ public class SecurityConfig {
                                 "/api/auth/login-otp",
                                 "/api/auth/verify-otp",
                                 "/api/auth/request-otp-email",
-                                "/api/auth/verify-otp-register",  // Thêm đường dẫn để xác thực OTP
-                                "/api/auth/forgot-password").permitAll() // Cho phép truy cập các endpoint công khai
-                        .requestMatchers("/api/auth/profile/**").authenticated() // Xác thực JWT cho profile
-                        .anyRequest().authenticated() // Các request khác yêu cầu phải xác thực
+                                "/api/auth/verify-otp-register",
+                                "/api/auth/forgot-password").permitAll() // Đảm bảo forgot-password được phép truy cập
+                        .requestMatchers("/api/auth/profile/**").authenticated() // Chỉ xác thực cho profile
+                        .anyRequest().authenticated() // Các request khác yêu cầu xác thực
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Thêm JWT filter trước UsernamePasswordAuthenticationFilter
-
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Thêm JWT filter
         return http.build();
     }
+
 
 }
