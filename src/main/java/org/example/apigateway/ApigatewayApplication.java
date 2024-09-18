@@ -6,7 +6,10 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import org.springframework.scheduling.annotation.EnableScheduling;
+
 @SpringBootApplication
+@EnableScheduling
 public class ApigatewayApplication implements CommandLineRunner {
 
     @Autowired
@@ -18,7 +21,8 @@ public class ApigatewayApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Gọi phương thức tạo người dùng mặc định
-//        userService.createDefaultUser();
+        // Gọi phương thức tạo người dùng mặc định (nếu cần)
+        // userService.createDefaultUser();
     }
 }
+

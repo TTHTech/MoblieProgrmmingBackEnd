@@ -43,7 +43,10 @@ public class UserController {
 
     // Xác nhận OTP và kích hoạt tài khoản
     @PostMapping("/verify-otp-register")
-    public ResponseEntity<String> verifyOtpForRegistration(@RequestParam String email, @RequestParam String otp) {
+    public ResponseEntity<String> verifyOtpForRegistration(@RequestBody Map<String, String> requestBody) {
+        String email = requestBody.get("email");
+        String otp = requestBody.get("otp");
+
         if (userService.verifyOtp(email, otp)) {
             Optional<User> userOpt = userService.findByEmail(email);
             if (userOpt.isPresent()) {
@@ -55,6 +58,7 @@ public class UserController {
         }
         return ResponseEntity.status(401).body("Invalid OTP or email");
     }
+
 
     // Đăng nhập
     @PostMapping("/login")
@@ -73,7 +77,6 @@ public class UserController {
     }
 
 
-    // Gửi OTP qua email để đăng nhập
     @PostMapping("/request-otp-email")
     public ResponseEntity<String> requestOtpByEmail(@RequestBody Map<String, String> requestBody) {
         String email = requestBody.get("email");
@@ -101,7 +104,6 @@ public class UserController {
         return ResponseEntity.status(401).body("Invalid OTP or Email");
     }
 
-    // Quên mật khẩu - Gửi OTP để đặt lại mật khẩu
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestParam String email) {
         if (userService.findByEmail(email).isPresent()) {
@@ -111,7 +113,6 @@ public class UserController {
         return ResponseEntity.status(404).body("Email not found");
     }
 
-    // Xác nhận OTP và đặt lại mật khẩu
     @PostMapping("/verify-otp")
     public ResponseEntity<String> verifyOtp(@RequestBody OtpRequest otpRequest) {
         String email = otpRequest.getEmail();

@@ -22,8 +22,6 @@ public class SecurityConfig {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
-    // Bean PasswordEncoder để mã hóa mật khẩu
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -33,7 +31,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Tắt CSRF nếu không cần thiết
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/register",
                                 "/api/auth/login",
@@ -41,11 +39,11 @@ public class SecurityConfig {
                                 "/api/auth/verify-otp",
                                 "/api/auth/request-otp-email",
                                 "/api/auth/verify-otp-register",
-                                "/api/auth/forgot-password").permitAll() // Đảm bảo forgot-password được phép truy cập
-                        .requestMatchers("/api/auth/profile/**").authenticated() // Chỉ xác thực cho profile
-                        .anyRequest().authenticated() // Các request khác yêu cầu xác thực
+                                "/api/auth/forgot-password").permitAll()
+                        .requestMatchers("/api/auth/profile/**").authenticated()
+                        .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Thêm JWT filter
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

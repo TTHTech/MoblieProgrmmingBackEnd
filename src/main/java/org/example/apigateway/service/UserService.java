@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
@@ -93,7 +95,7 @@ public class UserService implements UserDetailsService {
             User user = userOpt.get();
             String otp = generateOtp();
             user.setOtp(otp);
-            user.setOtpExpirationTime(LocalDateTime.now().plusMinutes(10));
+            user.setOtpExpirationTime(LocalDateTime.now().plusMinutes(1));
             saveUser(user);
             sendOtpEmail(user.getEmail(), otp);
         }
@@ -144,6 +146,15 @@ public class UserService implements UserDetailsService {
             }
         } else {
             throw new UsernameNotFoundException("User not found with id: " + userId);
+        }
+    }
+    @Scheduled(fixedRate = 60000) // 60000 ms = 1 phút
+    public void deleteExpiredUsers() {
+        LocalDateTime now = LocalDateTime.now();
+        List<User> expiredUsers = userRepository.findAllByOtpExpirationTimeBeforeAndIsActiveFalse(now);
+        if (!expiredUsers.isEmpty()) {
+            userRepository.deleteAll(expiredUsers);
+            System.out.println("Deleted expired users: " + expiredUsers.size());
         }
     }
 
