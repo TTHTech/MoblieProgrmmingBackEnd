@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -61,20 +63,29 @@ public class UserController {
 
 
     // Đăng nhập
+    // Đăng nhập
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody User user) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody User user) {
         Optional<User> userOpt = userService.findByUsername(user.getUsername());
         if (userOpt.isPresent() && userOpt.get().isActive()) {
             boolean isValidUser = userService.validateUser(user.getUsername(), user.getPassword());
             if (isValidUser) {
                 String token = jwtUtil.generateToken(user.getUsername());
-                return ResponseEntity.ok("Bearer " + token);
+                Long userId = userOpt.get().getId(); // Lấy userId từ đối tượng User
+                String email = userOpt.get().getEmail(); // Lấy email từ đối tượng User
+                Map<String, Object> response = new HashMap<>();
+                response.put("token", token);
+                response.put("userId", userId); // Trả về userId trong phản hồi
+                response.put("email", email); // Trả về email trong phản hồi
+                return ResponseEntity.ok(response);
             }
         } else if (userOpt.isPresent() && !userOpt.get().isActive()) {
-            return ResponseEntity.status(403).body("Account not activated. Please verify your OTP.");
+            return ResponseEntity.status(403).body(Collections.singletonMap("message", "Account not activated. Please verify your OTP."));
         }
-        return ResponseEntity.status(401).body("Invalid username or password");
+        return ResponseEntity.status(401).body(Collections.singletonMap("message", "Invalid username or password"));
     }
+
+
 
 
     @PostMapping("/request-otp-email")
@@ -140,7 +151,7 @@ public class UserController {
     }
 
     // Cập nhật hồ sơ người dùng sau khi xác nhận OTP
-    @PutMapping("/profile/{userId}")
+    @PutMapping("/profile/update/{userId}")
     public ResponseEntity<String> updateProfile(@PathVariable Long userId, @RequestBody User updatedUser) {
         // Tìm người dùng hiện tại trong cơ sở dữ liệu
         Optional<User> existingUserOpt = userService.findById(userId);
@@ -166,6 +177,19 @@ public class UserController {
             return ResponseEntity.status(404).body(e.getMessage());
         }
     }
+    @GetMapping("/profile/{userId}")
+    public ResponseEntity<?> getProfile(@PathVariable Long userId) {
+        Optional<User> userOpt = userService.findById(userId);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            // Ẩn mật khẩu khi trả về
+            user.setPassword(null);
+            return ResponseEntity.ok(user);
+        } else {
+            return ResponseEntity.status(404).body("User not found");
+        }
+    }
+
 
 
 }
